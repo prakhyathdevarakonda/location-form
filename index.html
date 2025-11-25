@@ -1,180 +1,275 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Family Data Form</title>
+  <title>JGM Christmas Carols</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
   <style>
-    /* --- MOBILE OPTIMIZED CSS --- */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; }
+    /* --- CHURCH THEME CSS --- */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 15px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     
-    h2 { text-align: center; color: #333; margin-bottom: 20px; font-size: 1.4rem; }
+    h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 5px; }
+    p.subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 25px; }
     
-    form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    label { font-weight: 600; display: block; margin-top: 15px; margin-bottom: 5px; color: #34495e; font-size: 0.9rem; }
     
-    label { font-weight: 600; display: block; margin-top: 15px; margin-bottom: 5px; color: #444; font-size: 0.9rem; }
+    input, select, button { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 16px; background: #fff; }
     
-    /* Inputs: Large padding for easy mobile tapping */
-    input, button { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    .row-grid { display: flex; gap: 10px; }
+    .row-grid > div { flex: 1; }
+
+    .section-title { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px; font-size: 1.1rem; color: #c0392b; font-weight: bold; }
+
+    /* Family Cards */
+    .family-card { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; }
+    .delete-btn { position: absolute; top: -10px; right: -5px; background: #e74c3c; color: white; width: 28px; height: 28px; border-radius: 50%; padding: 0; font-size: 14px; line-height: 28px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;}
     
-    /* Dynamic Family Rows */
-    .family-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-    .name-field { flex: 2; margin-bottom: 0; } 
-    .age-field { flex: 1; margin-bottom: 0; }  
+    /* Buttons */
+    .add-btn { background-color: #3498db; color: white; border: none; margin-bottom: 20px; }
     
-    /* Red Delete Button (X) */
-    .delete-btn { width: 40px; background: #ff4d4d; color: white; border: none; font-weight: bold; cursor: pointer; padding: 0; height: 45px; display: flex; align-items: center; justify-content: center; }
+    /* Location Button */
+    .loc-btn { background-color: #27ae60; color: white; font-weight: bold; margin-bottom: 5px; border: 2px solid #27ae60; }
     
-    /* Map Container */
-    #map { height: 250px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; }
+    /* Error/Warning States */
+    .loc-error { border-color: red !important; background-color: #ffe6e6 !important; color: #c0392b !important; }
+    .loc-failed { background-color: #e67e22 !important; border-color: #e67e22 !important; color: white !important; } /* Orange */
+
+    .submit-btn { background-color: #d35400; color: white; font-size: 18px; font-weight: bold; margin-top: 15px; height: 50px; }
     
-    /* Action Buttons */
-    button { font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
-    button:active { transform: scale(0.98); }
-    
-    .add-btn { background-color: #e9ecef; color: #333; margin-bottom: 10px; border: 1px dashed #bbb; }
-    .loc-btn { background-color: #28a745; color: white; margin-bottom: 15px; }
-    .submit-btn { background-color: #007bff; color: white; height: 50px; font-size: 18px; margin-top: 10px;}
-    
-    #status { text-align: center; font-weight: bold; margin-top: 15px; min-height: 20px; }
+    /* Map Hidden Default */
+    #map { height: 200px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; display:none; }
+    .map-visible { display: block !important; }
+
+    #status { text-align: center; margin-top: 15px; font-weight: bold; }
+    #loc-msg { font-size: 0.85rem; color: #666; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <h2>📋 Family Info & Location</h2>
+<div class="container">
+  <h2>🎄 JGM Christmas Carols</h2>
+  <p class="subtitle">Please fill details for house visit</p>
 
   <form id="myForm">
-    <label>Your Name</label>
-    <input name="Name" type="text" placeholder="Full Name" required>
+    
+    <div class="section-title">👤 Your Details (Primary Contact)</div>
+    
+    <label>Full Name</label>
+    <input name="PrimaryName" type="text" placeholder="Enter Name" required>
 
     <label>Mobile Number</label>
     <input name="Mobile" type="tel" placeholder="10-digit Number" required>
 
-    <label>Family Members</label>
-    <div id="family-container">
-        <div class="family-row">
-            <input type="text" class="name-field" placeholder="Name (e.g. Wife)" required>
-            <input type="number" class="age-field" placeholder="Age" required>
-            <div style="width: 40px;"></div> </div>
+    <div class="row-grid">
+        <div>
+            <label>Age</label>
+            <input name="PrimaryAge" type="number" placeholder="Age" required>
+        </div>
+        <div>
+            <label>Gender</label>
+            <select name="PrimaryGender" required>
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
     </div>
+
+    <div class="section-title">👨‍👩‍👧‍👦 Other Family Members</div>
+    <p style="font-size: 0.8rem; color: #666; margin-top:-10px; margin-bottom: 15px;">Add everyone else living in the house.</p>
     
-    <button type="button" class="add-btn" onclick="addFamilyMember()">+ Add Another Member</button>
+    <div id="family-container"></div>
 
-    <input type="hidden" name="FamilyMembers" id="finalNames">
-    <input type="hidden" name="FamilyAges" id="finalAges">
+    <button type="button" class="add-btn" onclick="addMember()">+ Add Family Member</button>
 
-    <label>Location (High Accuracy)</label>
-    <div style="display: flex; gap: 10px;">
-        <input name="Latitude" type="text" id="lat" placeholder="Lat" readonly required style="background: #e9ecef; font-size: 0.8rem;">
-        <input name="Longitude" type="text" id="lng" placeholder="Lng" readonly required style="background: #e9ecef; font-size: 0.8rem;">
-    </div>
+    <input type="hidden" name="FamilyDetails" id="finalFamilyData">
 
-    <button type="button" class="loc-btn" onclick="getLocation()">📍 Tap to Get GPS Location</button>
+    <div class="section-title">📍 House Location <span style="color:red">*</span></div>
+    
+    <input name="Latitude" type="hidden" id="lat">
+    <input name="Longitude" type="hidden" id="lng">
+    
+    <input type="hidden" id="locationAttempted" value="false">
+
+    <p id="loc-msg">You <b>must</b> click the button below to share location.</p>
+
+    <button type="button" class="loc-btn" id="locBtn" onclick="getLocation()">📍 Click to Share Location</button>
+    
     <div id="map"></div>
 
-    <button type="submit" id="submitBtn" class="submit-btn">Submit Data</button>
+    <button type="submit" id="submitBtn" class="submit-btn">Submit Information</button>
+
   </form>
-
   <p id="status"></p>
+</div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<datalist id="relations">
+  <option value="Wife"><option value="Husband"><option value="Son"><option value="Daughter">
+  <option value="Father"><option value="Mother"><option value="Brother"><option value="Sister">
+  <option value="Grandparent"><option value="Friend"><option value="Relative">
+</datalist>
 
-  <script>
-    // --- 1. DYNAMIC ROWS & DELETE FUNCTION ---
-    function addFamilyMember() {
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // --- 1. FAMILY LOGIC ---
+    function addMember() {
         const container = document.getElementById('family-container');
-        const div = document.createElement('div');
-        div.className = 'family-row';
-        // This row includes the Delete Button
-        div.innerHTML = `
-            <input type="text" class="name-field" placeholder="Name" required>
-            <input type="number" class="age-field" placeholder="Age" required>
-            <button type="button" class="delete-btn" onclick="removeRow(this)">✕</button>
-        `;
-        container.appendChild(div);
+        const card = document.createElement('div');
+        card.className = 'family-card';
+        card.innerHTML = `
+            <button type="button" class="delete-btn" onclick="this.parentElement.remove()">✕</button>
+            <label style="margin-top:0">Name</label>
+            <input type="text" class="mem-name" placeholder="Name" style="margin-bottom:10px">
+            <label>Relation</label>
+            <input list="relations" class="mem-relation" placeholder="Select or Type..." style="margin-bottom:10px">
+            <div class="row-grid">
+                <div><label>Age</label><input type="number" class="mem-age" placeholder="Age"></div>
+                <div><label>Gender</label>
+                    <select class="mem-gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>`;
+        container.appendChild(card);
     }
 
-    function removeRow(btn) {
-        // Removes the row containing the button that was clicked
-        btn.parentElement.remove();
-    }
-
-    // --- 2. MAP & GEOLOCATION ---
-    var map = L.map('map').setView([17.3850, 78.4867], 11); // Default View
-    var marker;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-    function updateLocation(lat, lng) {
-        document.getElementById('lat').value = lat;
-        document.getElementById('lng').value = lng;
-        if (marker) marker.setLatLng([lat, lng]);
-        else marker = L.marker([lat, lng]).addTo(map);
-        map.setView([lat, lng], 16);
-    }
-
-    map.on('click', function(e) { updateLocation(e.latlng.lat, e.latlng.lng); });
-
+    // --- 2. LOCATION LOGIC ---
+    var map, marker;
+    
     function getLocation() {
-      const status = document.getElementById('status');
-      if (navigator.geolocation) {
-        status.innerHTML = "⏳ Triangulating GPS...";
-        navigator.geolocation.getCurrentPosition((position) => {
-            status.innerHTML = "";
-            updateLocation(position.coords.latitude, position.coords.longitude);
-        }, (err) => { alert("Error: " + err.message); }, 
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-      } else { alert("Geolocation not supported"); }
+        const status = document.getElementById('status');
+        const locBtn = document.getElementById('locBtn');
+        const locMsg = document.getElementById('loc-msg');
+        const attemptTracker = document.getElementById('locationAttempted');
+        
+        // Mark that they CLICKED the button (Intent is present)
+        attemptTracker.value = "true";
+
+        if (!navigator.geolocation) { 
+            handleLocFailure("GPS Not Supported");
+            return; 
+        }
+        
+        locBtn.innerHTML = "⏳ Finding Location...";
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // SUCCESS SCENARIO
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                document.getElementById('lat').value = lat;
+                document.getElementById('lng').value = lng;
+                
+                locBtn.innerHTML = "✅ Location Found!";
+                locBtn.style.backgroundColor = "#27ae60"; 
+                locBtn.classList.remove('loc-error'); 
+                locBtn.classList.remove('loc-failed'); 
+
+                locMsg.innerHTML = "Location saved. You can submit now.";
+                locMsg.style.color = "green";
+                
+                document.getElementById('map').classList.add('map-visible');
+                if (!map) {
+                    map = L.map('map').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                } else {
+                    map.setView([lat, lng], 16);
+                    map.invalidateSize();
+                }
+                if (marker) marker.setLatLng([lat, lng]);
+                else marker = L.marker([lat, lng]).addTo(map);
+            },
+            (error) => { 
+                // FAILURE SCENARIO (But we allow submit now)
+                handleLocFailure("GPS Failed");
+            },
+            { enableHighAccuracy: true, timeout: 8000 } // Wait 8 seconds max
+        );
     }
 
-    // --- 3. FAST FORM SUBMISSION ---
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzezWoUzeT3VrFxSP2Xai3hr-aAmHp6q8tGUMqqULDn9Dl8i7QmbjXPEbf_BZ0Sr33y/exec'; // <--- PASTE YOUR URL HERE
+    function handleLocFailure(reason) {
+        const locBtn = document.getElementById('locBtn');
+        const locMsg = document.getElementById('loc-msg');
+        
+        // Turn button Orange
+        locBtn.innerHTML = "⚠️ Location Failed (Tap to Retry)";
+        locBtn.classList.add('loc-failed');
+        locBtn.classList.remove('loc-error');
+        
+        // Update message to tell them it's okay
+        locMsg.innerHTML = "Could not find map location, but <b>you can Submit now.</b>";
+        locMsg.style.color = "#e67e22"; // Orange
+    }
 
+    // --- 3. SUBMIT LOGIC ---
+    const scriptURL = 'YOUR_WEB_APP_URL_HERE'; // <--- PASTE SCRIPT URL HERE
     const form = document.getElementById('myForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const status = document.getElementById('status');
-
+    
     form.addEventListener('submit', e => {
-      e.preventDefault();
-      
-      // A. Combine Family Data into lists
-      const nameInputs = document.querySelectorAll('.name-field');
-      const ageInputs = document.querySelectorAll('.age-field');
-      
-      let namesList = [];
-      let agesList = [];
+        e.preventDefault();
+        
+        // --- LOGIC CHECK ---
+        const lat = document.getElementById('lat').value;
+        const attempted = document.getElementById('locationAttempted').value;
+        const locBtn = document.getElementById('locBtn');
+        
+        // If they have NO coordinates AND they haven't even clicked the button yet...
+        if(!lat && attempted === "false") {
+            // Block them
+            locBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            locBtn.classList.add('loc-error');
+            locBtn.innerHTML = "⚠️ REQUIRED: Click to Share Location";
+            alert("Please CLICK the Location button first.");
+            return; 
+        }
 
-      nameInputs.forEach(input => namesList.push(input.value));
-      ageInputs.forEach(input => agesList.push(input.value));
+        // If code reaches here, it means:
+        // EITHER: They have Lat/Long (Success)
+        // OR: They tried, it failed, but we are letting them pass.
 
-      // Update hidden inputs
-      document.getElementById('finalNames').value = namesList.join(", ");
-      document.getElementById('finalAges').value = agesList.join(", ");
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = "Submitting...";
 
-      // B. Submit Data
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = "Saving...";
+        // GATHER FAMILY DATA
+        let familyData = [];
+        document.querySelectorAll('.family-card').forEach(card => {
+            const name = card.querySelector('.mem-name').value;
+            const relation = card.querySelector('.mem-relation').value;
+            const age = card.querySelector('.mem-age').value;
+            const gender = card.querySelector('.mem-gender').value;
+            if(name) familyData.push(`${name} (${relation}, ${age}, ${gender})`);
+        });
+        document.getElementById('finalFamilyData').value = familyData.join(" | ");
 
-      fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+        // SEND
+        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
         .then(response => {
-            status.innerHTML = "✅ Data Saved Successfully!";
+            document.getElementById('status').innerHTML = "✅ Details Submitted! See you at Christmas!";
             form.reset();
-            // Reset family rows to initial state
-            document.getElementById('family-container').innerHTML = `
-                <div class="family-row">
-                    <input type="text" class="name-field" placeholder="Name (e.g. Wife)" required>
-                    <input type="number" class="age-field" placeholder="Age" required>
-                    <div style="width: 40px;"></div>
-                </div>`;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = "Submit Data";
+            document.getElementById('family-container').innerHTML = ""; 
+            document.getElementById('map').classList.remove('map-visible');
+            document.getElementById('locationAttempted').value = "false"; // Reset attempt flag
+            
+            locBtn.innerHTML = "📍 Click to Share Location"; 
+            locBtn.classList.remove('loc-failed', 'loc-error');
+            locBtn.style.backgroundColor = ""; // Reset color
+
+            btn.disabled = false;
+            btn.innerHTML = "Submit Information";
         })
         .catch(error => {
-            status.innerHTML = "❌ Error! " + error.message;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = "Try Again";
+            document.getElementById('status').innerHTML = "❌ Error! " + error.message;
+            btn.disabled = false;
         });
     });
-  </script>
+</script>
+
 </body>
 </html>
