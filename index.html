@@ -1,37 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Location Form</title>
+  <title>Family Data Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
-    input, button { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
-    #map { height: 300px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; }
-    .hidden { display: none; }
-    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
-    button.secondary { background-color: #6c757d; }
+    /* --- MOBILE OPTIMIZED CSS --- */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 600px; margin: 0 auto; background-color: #f4f7f6; }
+    
+    h2 { text-align: center; color: #333; margin-bottom: 20px; font-size: 1.4rem; }
+    
+    form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    
+    label { font-weight: 600; display: block; margin-top: 15px; margin-bottom: 5px; color: #444; font-size: 0.9rem; }
+    
+    /* Inputs: Large padding for easy mobile tapping */
+    input, button { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    
+    /* Dynamic Family Rows */
+    .family-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .name-field { flex: 2; margin-bottom: 0; } 
+    .age-field { flex: 1; margin-bottom: 0; }  
+    
+    /* Red Delete Button (X) */
+    .delete-btn { width: 40px; background: #ff4d4d; color: white; border: none; font-weight: bold; cursor: pointer; padding: 0; height: 45px; display: flex; align-items: center; justify-content: center; }
+    
+    /* Map Container */
+    #map { height: 250px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; }
+    
+    /* Action Buttons */
+    button { font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+    button:active { transform: scale(0.98); }
+    
+    .add-btn { background-color: #e9ecef; color: #333; margin-bottom: 10px; border: 1px dashed #bbb; }
+    .loc-btn { background-color: #28a745; color: white; margin-bottom: 15px; }
+    .submit-btn { background-color: #007bff; color: white; height: 50px; font-size: 18px; margin-top: 10px;}
+    
+    #status { text-align: center; font-weight: bold; margin-top: 15px; min-height: 20px; }
   </style>
 </head>
 <body>
 
-  <h2>Submit Location</h2>
+  <h2>📋 Family Info & Location</h2>
 
-  <form name="submit-to-google-sheet">
-    <input name="Name" type="text" placeholder="Your Name" required>
-    
-    <input name="Latitude" type="text" id="lat" placeholder="Latitude" readonly required>
-    <input name="Longitude" type="text" id="lng" placeholder="Longitude" readonly required>
+  <form id="myForm">
+    <label>Your Name</label>
+    <input name="Name" type="text" placeholder="Full Name" required>
 
-    <button type="button" class="secondary" onclick="getLocation()">📍 Get My Current Location</button>
-    <p style="text-align:center; margin: 10px 0;">OR Click on the Map</p>
+    <label>Mobile Number</label>
+    <input name="Mobile" type="tel" placeholder="10-digit Number" required>
+
+    <label>Family Members</label>
+    <div id="family-container">
+        <div class="family-row">
+            <input type="text" class="name-field" placeholder="Name (e.g. Wife)" required>
+            <input type="number" class="age-field" placeholder="Age" required>
+            <div style="width: 40px;"></div> </div>
+    </div>
     
+    <button type="button" class="add-btn" onclick="addFamilyMember()">+ Add Another Member</button>
+
+    <input type="hidden" name="FamilyMembers" id="finalNames">
+    <input type="hidden" name="FamilyAges" id="finalAges">
+
+    <label>Location (High Accuracy)</label>
+    <div style="display: flex; gap: 10px;">
+        <input name="Latitude" type="text" id="lat" placeholder="Lat" readonly required style="background: #e9ecef; font-size: 0.8rem;">
+        <input name="Longitude" type="text" id="lng" placeholder="Lng" readonly required style="background: #e9ecef; font-size: 0.8rem;">
+    </div>
+
+    <button type="button" class="loc-btn" onclick="getLocation()">📍 Tap to Get GPS Location</button>
     <div id="map"></div>
 
-    <button type="submit" id="submitBtn">Submit Form</button>
+    <button type="submit" id="submitBtn" class="submit-btn">Submit Data</button>
   </form>
 
   <p id="status"></p>
@@ -39,70 +81,98 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // 1. Initialize Map
-    // Default view (London), will update if user allows location
-    var map = L.map('map').setView([51.505, -0.09], 13); 
+    // --- 1. DYNAMIC ROWS & DELETE FUNCTION ---
+    function addFamilyMember() {
+        const container = document.getElementById('family-container');
+        const div = document.createElement('div');
+        div.className = 'family-row';
+        // This row includes the Delete Button
+        div.innerHTML = `
+            <input type="text" class="name-field" placeholder="Name" required>
+            <input type="number" class="age-field" placeholder="Age" required>
+            <button type="button" class="delete-btn" onclick="removeRow(this)">✕</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeRow(btn) {
+        // Removes the row containing the button that was clicked
+        btn.parentElement.remove();
+    }
+
+    // --- 2. MAP & GEOLOCATION ---
+    var map = L.map('map').setView([17.3850, 78.4867], 11); // Default View
     var marker;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-    // Add OpenStreetMap tiles (Free, no API key needed)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // 2. Function to update inputs and marker when location is found/clicked
     function updateLocation(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lng').value = lng;
-
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng]).addTo(map);
-        }
-        map.setView([lat, lng], 15);
+        if (marker) marker.setLatLng([lat, lng]);
+        else marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 16);
     }
 
-    // 3. "Get My Location" Button Logic
+    map.on('click', function(e) { updateLocation(e.latlng.lat, e.latlng.lng); });
+
     function getLocation() {
+      const status = document.getElementById('status');
       if (navigator.geolocation) {
+        status.innerHTML = "⏳ Triangulating GPS...";
         navigator.geolocation.getCurrentPosition((position) => {
+            status.innerHTML = "";
             updateLocation(position.coords.latitude, position.coords.longitude);
-        }, () => {
-            alert("Unable to retrieve your location.");
-        });
-      } else {
-        alert("Geolocation is not supported by this browser.");
-      }
+        }, (err) => { alert("Error: " + err.message); }, 
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+      } else { alert("Geolocation not supported"); }
     }
 
-    // 4. Click on Map Logic
-    map.on('click', function(e) {
-        updateLocation(e.latlng.lat, e.latlng.lng);
-    });
+    // --- 3. FAST FORM SUBMISSION ---
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzezWoUzeT3VrFxSP2Xai3hr-aAmHp6q8tGUMqqULDn9Dl8i7QmbjXPEbf_BZ0Sr33y/exec'; // <--- PASTE YOUR URL HERE
 
-    // 5. Send Data to Google Sheets
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyX5vpCt0PhVhKFKZgvckc-pEdkgHc5JKFwmgKGz-SagP-5aL5PKYsTgd9h2OW_fAQsDw/exec'; // <--- PASTE YOUR GOOGLE SCRIPT URL HERE
-    const form = document.forms['submit-to-google-sheet'];
-    const status = document.getElementById('status');
+    const form = document.getElementById('myForm');
     const submitBtn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
 
     form.addEventListener('submit', e => {
       e.preventDefault();
+      
+      // A. Combine Family Data into lists
+      const nameInputs = document.querySelectorAll('.name-field');
+      const ageInputs = document.querySelectorAll('.age-field');
+      
+      let namesList = [];
+      let agesList = [];
+
+      nameInputs.forEach(input => namesList.push(input.value));
+      ageInputs.forEach(input => agesList.push(input.value));
+
+      // Update hidden inputs
+      document.getElementById('finalNames').value = namesList.join(", ");
+      document.getElementById('finalAges').value = agesList.join(", ");
+
+      // B. Submit Data
       submitBtn.disabled = true;
-      submitBtn.innerHTML = "Sending...";
+      submitBtn.innerHTML = "Saving...";
 
       fetch(scriptURL, { method: 'POST', body: new FormData(form)})
         .then(response => {
-            status.innerHTML = "✅ Success! Data saved to Sheet.";
-            submitBtn.innerHTML = "Submit Form";
-            submitBtn.disabled = false;
+            status.innerHTML = "✅ Data Saved Successfully!";
             form.reset();
-            // Optional: Reset map
+            // Reset family rows to initial state
+            document.getElementById('family-container').innerHTML = `
+                <div class="family-row">
+                    <input type="text" class="name-field" placeholder="Name (e.g. Wife)" required>
+                    <input type="number" class="age-field" placeholder="Age" required>
+                    <div style="width: 40px;"></div>
+                </div>`;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Submit Data";
         })
         .catch(error => {
             status.innerHTML = "❌ Error! " + error.message;
             submitBtn.disabled = false;
+            submitBtn.innerHTML = "Try Again";
         });
     });
   </script>
