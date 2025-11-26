@@ -61,7 +61,8 @@
     #map { height: 250px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; display:none; }
     .map-visible { display: block !important; }
 
-    #status { text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px; }
+    #status { text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px; transition: opacity 0.5s ease-out; }
+    #status.fade-out { opacity: 0; }
     #loc-msg { font-size: 0.85rem; color: #666; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
@@ -116,7 +117,7 @@
     <textarea name="PrayerRequest" placeholder="Type your prayer request here..." rows="3"></textarea>
 
     <label>Offering Amount (Optional)</label>
-    <input name="Offering" type="number" placeholder="₹ Amount" min="0" step="1">
+    <input name="Offering" type="number" placeholder="₹ Amount" min="0" step="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
 
     <label>Pastor Who Visited</label>
     <select name="PastorVisited" required>
@@ -337,10 +338,15 @@
         });
         document.getElementById('finalFamilyData').value = familyData.join(" | ");
 
+        // Clear any previous status message
+        const statusEl = document.getElementById('status');
+        statusEl.innerHTML = "";
+        statusEl.classList.remove('fade-out');
+
         // Send Data
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
         .then(response => {
-            document.getElementById('status').innerHTML = "✅ Details Submitted! God Bless.";
+            statusEl.innerHTML = "✅ Details Submitted! God Bless.";
             
             // Reset Form
             form.reset();
@@ -355,10 +361,28 @@
             
             btn.disabled = false;
             btn.innerHTML = "Submit Information";
+            
+            // Auto-hide success message after 4 seconds
+            setTimeout(() => {
+                statusEl.classList.add('fade-out');
+                setTimeout(() => {
+                    statusEl.innerHTML = "";
+                    statusEl.classList.remove('fade-out');
+                }, 500); // Wait for fade animation to complete
+            }, 4000);
         })
         .catch(error => {
-            document.getElementById('status').innerHTML = "❌ Error! " + error.message;
+            statusEl.innerHTML = "❌ Error! " + error.message;
             btn.disabled = false;
+            
+            // Auto-hide error message after 5 seconds
+            setTimeout(() => {
+                statusEl.classList.add('fade-out');
+                setTimeout(() => {
+                    statusEl.innerHTML = "";
+                    statusEl.classList.remove('fade-out');
+                }, 500);
+            }, 5000);
         });
     });
 </script>
