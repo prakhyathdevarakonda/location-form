@@ -6,41 +6,62 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
   <style>
-    /* --- CHURCH THEME CSS --- */
+    /* --- JGM CHURCH THEME --- */
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 15px; margin: 0; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     
-    h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 5px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    
+    h2 { text-align: center; color: #c0392b; /* Christmas Red */ margin-top: 0; margin-bottom: 5px; }
     p.subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 25px; }
     
+    /* Form Elements */
     label { font-weight: 600; display: block; margin-top: 15px; margin-bottom: 5px; color: #34495e; font-size: 0.9rem; }
     
-    input, select, button, textarea { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 16px; background: #fff; }
+    input, select, button, textarea { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; background: #fff; transition: 0.3s; max-width: 100%; }
+    
+    /* Fix for iOS date inputs in flex containers */
+    .row-grid input[type="date"] { -webkit-appearance: none; appearance: none; }
+    .row-grid > div { overflow: hidden; }
+    
+    input:focus, select:focus, textarea:focus { border-color: #3498db; outline: none; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+    
     textarea { min-height: 80px; resize: vertical; font-family: inherit; }
     
-    /* Grid for DOB and Age */
-    .row-grid { display: flex; gap: 10px; }
-    .row-grid > div { flex: 1; }
+    /* Layout Helpers */
+    .row-grid { display: flex; gap: 10px; align-items: flex-start; }
+    .row-grid > div { flex: 1; min-width: 0; }
+    .row-grid > div[style*="flex: 2"] { flex: 2; min-width: 0; }
+    .row-grid > div[style*="flex: 1"] { flex: 1; min-width: 0; }
     
-    /* Readonly Age Field (Grayed out) */
-    .age-box { background-color: #e9ecef; color: #555; font-weight: bold; cursor: not-allowed; }
+    /* Readonly Age Field */
+    .age-box { background-color: #f1f2f6; color: #2c3e50; font-weight: bold; cursor: not-allowed; border-color: #ddd; }
 
-    .section-title { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px; font-size: 1.1rem; color: #c0392b; font-weight: bold; }
+    .section-title { border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 30px; margin-bottom: 15px; font-size: 1.1rem; color: #d35400; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Family Cards */
-    .family-card { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; }
-    .delete-btn { position: absolute; top: -10px; right: -5px; background: #e74c3c; color: white; width: 28px; height: 28px; border-radius: 50%; padding: 0; font-size: 14px; line-height: 28px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;}
+    /* Family Member Cards */
+    .family-card { background: #f8f9fa; border: 1px solid #e1e4e8; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .delete-btn { position: absolute; top: -10px; right: -5px; background: #e74c3c; color: white; width: 28px; height: 28px; border-radius: 50%; padding: 0; font-size: 14px; line-height: 28px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
-    
-    .add-btn { background-color: #3498db; color: white; border: none; margin-bottom: 20px; }
+    /* Buttons */
+    .add-btn { background-color: #3498db; color: white; border: none; margin-bottom: 10px; font-weight: 600; }
+    .add-btn:hover { background-color: #2980b9; }
+
     .loc-btn { background-color: #27ae60; color: white; font-weight: bold; margin-bottom: 5px; border: 2px solid #27ae60; }
-    .loc-error { border-color: red !important; background-color: #ffe6e6 !important; color: #c0392b !important; }
+    .loc-btn:hover { background-color: #219150; }
+
+    .submit-btn { background-color: #d35400; color: white; font-size: 18px; font-weight: bold; margin-top: 20px; height: 55px; border: none; box-shadow: 0 4px 6px rgba(211, 84, 0, 0.2); }
+    .submit-btn:disabled { background-color: #95a5a6; cursor: wait; }
+
+    /* Error & Success States */
+    .loc-error { border-color: #e74c3c !important; background-color: #fadbd8 !important; color: #c0392b !important; }
     .loc-failed { background-color: #e67e22 !important; border-color: #e67e22 !important; color: white !important; } 
 
-    .submit-btn { background-color: #d35400; color: white; font-size: 18px; font-weight: bold; margin-top: 15px; height: 50px; }
-    #map { height: 200px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; display:none; }
+    #map { height: 250px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; display:none; }
     .map-visible { display: block !important; }
-    #status { text-align: center; margin-top: 15px; font-weight: bold; }
+
+    #status { text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px; }
     #loc-msg { font-size: 0.85rem; color: #666; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
@@ -48,30 +69,32 @@
 
 <div class="container">
   <h2>🎄 JGM Christmas Carols</h2>
-  <p class="subtitle">Please fill details for house visit</p>
+  <p class="subtitle">Please fill details for the house visit</p>
 
   <form id="myForm">
     
     <div class="section-title">👤 Your Details (Primary Contact)</div>
     
     <label>Full Name</label>
-    <input name="PrimaryName" type="text" placeholder="Enter Name" required>
+    <input name="PrimaryName" type="text" placeholder="Enter Full Name" required>
 
     <label>Mobile Number</label>
-    <input name="Mobile" type="tel" placeholder="10-digit Number" required>
+    <input name="Mobile" type="tel" placeholder="10-digit Mobile Number" required>
 
     <div class="row-grid">
-        <div style="flex: 2;"> <label>Date of Birth</label>
+        <div style="flex: 2;"> 
+            <label>Date of Birth</label>
             <input name="PrimaryDOB" type="date" id="mainDob" onchange="calcAge(this, 'mainAge')" required>
         </div>
-        <div style="flex: 1;"> <label>Age</label>
-            <input type="text" id="mainAge" class="age-box" placeholder="0" readonly>
+        <div style="flex: 1;"> 
+            <label>Age</label>
+            <input name="PrimaryAge" type="text" id="mainAge" class="age-box" placeholder="0" readonly>
         </div>
     </div>
     
     <label>Gender</label>
     <select name="PrimaryGender" required>
-        <option value="">Select</option>
+        <option value="">Select Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
         <option value="Other">Other</option>
@@ -80,19 +103,22 @@
     <div class="section-title">👨‍👩‍👧‍👦 Other Family Members</div>
     <p style="font-size: 0.8rem; color: #666; margin-top:-10px; margin-bottom: 15px;">Add everyone else living in the house.</p>
     
-    <div id="family-container"></div>
+    <div id="family-container">
+        </div>
 
     <button type="button" class="add-btn" onclick="addMember()">+ Add Family Member</button>
 
     <input type="hidden" name="FamilyDetails" id="finalFamilyData">
 
-    <div class="section-title">🙏 Prayer Request</div>
-    <textarea name="PrayerRequest" placeholder="Enter your prayer request (optional)" rows="4"></textarea>
+    <div class="section-title">🙏 Prayer & Offering</div>
+    
+    <label>Prayer Request (Optional)</label>
+    <textarea name="PrayerRequest" placeholder="Type your prayer request here..." rows="3"></textarea>
 
-    <div class="section-title">💰 Offering</div>
-    <input name="Offering" type="number" placeholder="Enter amount (optional)" min="0" step="0.01">
+    <label>Offering Amount (Optional)</label>
+    <input name="Offering" type="number" placeholder="₹ Amount" min="0" step="1">
 
-    <div class="section-title">👨‍💼 Pastor Who Visited</div>
+    <label>Pastor Who Visited</label>
     <select name="PastorVisited" required>
         <option value="">Select Pastor</option>
         <option value="Ps. Joshua Gummala">Ps. Joshua Gummala</option>
@@ -122,8 +148,9 @@
 
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-    // --- 1. AGE CALCULATOR LOGIC ---
+    // --- 1. AGE CALCULATOR ---
     function calcAge(dateInput, ageOutputId) {
         const dobValue = dateInput.value;
         if (!dobValue) return;
@@ -134,34 +161,31 @@
         let age = today.getFullYear() - dob.getFullYear();
         const monthDiff = today.getMonth() - dob.getMonth();
         
-        // Adjust if birthday hasn't happened yet this year
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
             age--;
         }
-        
-        // Prevent negative age
         if (age < 0) age = 0;
 
-        // Update the Age box
         if (ageOutputId) {
             document.getElementById(ageOutputId).value = age;
         } else {
-            // If no ID provided (for dynamic rows), find the sibling input
-            // This logic is handled inside the onchange of the dynamic row
             return age;
         }
     }
 
-    // --- 2. FAMILY LOGIC ---
+    // --- 2. FAMILY MEMBER LOGIC ---
     function addMember() {
         const container = document.getElementById('family-container');
         const card = document.createElement('div');
         card.className = 'family-card';
-        // Note the onchange event on the date input below
+        
+        // This HTML structure ensures cleaner data entry
         card.innerHTML = `
             <button type="button" class="delete-btn" onclick="this.parentElement.remove()">✕</button>
+            
             <label style="margin-top:0">Name</label>
-            <input type="text" class="mem-name" placeholder="Name" style="margin-bottom:10px">
+            <input type="text" class="mem-name" placeholder="Family Member Name" style="margin-bottom:10px">
+            
             <label>Relation</label>
             <select class="mem-relation" style="margin-bottom:10px">
                 <option value="">Select Relation</option>
@@ -174,7 +198,6 @@
                 <option value="Brother">Brother</option>
                 <option value="Sister">Sister</option>
                 <option value="Grandparent">Grandparent</option>
-                <option value="Friend">Friend</option>
                 <option value="Relative">Relative</option>
                 <option value="Other">Other</option>
             </select>
@@ -200,17 +223,15 @@
         container.appendChild(card);
     }
 
-
-    // Helper for dynamic rows
     function updateDynamicAge(input) {
-        const age = calcAge(input); // Calculate age
-        // Find the age input in the same row-grid
+        const age = calcAge(input); 
         const ageBox = input.parentElement.parentElement.querySelector('.mem-age');
         ageBox.value = age;
     }
 
     // --- 3. LOCATION LOGIC ---
     var map, marker;
+    
     function getLocation() {
         const status = document.getElementById('status');
         const locBtn = document.getElementById('locBtn');
@@ -219,12 +240,16 @@
         
         attemptTracker.value = "true";
 
-        if (!navigator.geolocation) { handleLocFailure("GPS Not Supported"); return; }
+        if (!navigator.geolocation) { 
+            handleLocFailure("GPS Not Supported"); 
+            return; 
+        }
         
         locBtn.innerHTML = "⏳ Finding Location...";
         
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                // Success
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 document.getElementById('lat').value = lat;
@@ -233,9 +258,11 @@
                 locBtn.innerHTML = "✅ Location Found!";
                 locBtn.style.backgroundColor = "#27ae60"; 
                 locBtn.classList.remove('loc-error', 'loc-failed'); 
+                
                 locMsg.innerHTML = "Location saved. You can submit now.";
                 locMsg.style.color = "green";
                 
+                // Show Map
                 document.getElementById('map').classList.add('map-visible');
                 if (!map) {
                     map = L.map('map').setView([lat, lng], 16);
@@ -247,7 +274,10 @@
                 if (marker) marker.setLatLng([lat, lng]);
                 else marker = L.marker([lat, lng]).addTo(map);
             },
-            (error) => { handleLocFailure("GPS Failed"); },
+            (error) => { 
+                // Failure
+                handleLocFailure("GPS Failed"); 
+            },
             { enableHighAccuracy: true, timeout: 8000 }
         );
     }
@@ -255,15 +285,21 @@
     function handleLocFailure(reason) {
         const locBtn = document.getElementById('locBtn');
         const locMsg = document.getElementById('loc-msg');
+        
         locBtn.innerHTML = "⚠️ Location Failed (Tap to Retry)";
         locBtn.classList.add('loc-failed');
         locBtn.classList.remove('loc-error');
+        
+        // Allow submission anyway
         locMsg.innerHTML = "Could not find map location, but <b>you can Submit now.</b>";
         locMsg.style.color = "#e67e22"; 
     }
 
-    // --- 4. SUBMIT LOGIC ---
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzfduoOesMHqOd2FFTTILI196f_6b1I1PldYoWVWB5gI7TglphdPPlY8Qs_zqWa1GvD2g/exec'; // <--- PASTE SCRIPT URL HERE
+    // --- 4. FORM SUBMISSION ---
+    // 👇👇👇 PASTE YOUR NEW '/exec' URL BELOW 👇👇👇
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzfduoOesMHqOd2FFTTILI196f_6b1I1PldYoWVWB5gI7TglphdPPlY8Qs_zqWa1GvD2g/exec'; 
+    // 👆👆👆 PASTE IT ABOVE 👆👆👆
+
     const form = document.getElementById('myForm');
     
     form.addEventListener('submit', e => {
@@ -273,6 +309,7 @@
         const attempted = document.getElementById('locationAttempted').value;
         const locBtn = document.getElementById('locBtn');
         
+        // Strict Check: Must at least CLICK the button
         if(!lat && attempted === "false") {
             locBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
             locBtn.classList.add('loc-error');
@@ -285,29 +322,37 @@
         btn.disabled = true;
         btn.innerHTML = "Submitting...";
 
-        // GATHER FAMILY DATA
+        // Collect Family Data into one string
         let familyData = [];
         document.querySelectorAll('.family-card').forEach(card => {
             const name = card.querySelector('.mem-name').value;
             const relation = card.querySelector('.mem-relation').value;
-            const age = card.querySelector('.mem-age').value; // We send AGE now, not DOB
+            const age = card.querySelector('.mem-age').value; 
             const gender = card.querySelector('.mem-gender').value;
             
-            // Format: "Name (Relation, 5 yrs, Male)"
-            if(name) familyData.push(`${name} (${relation}, ${age} yrs, ${gender})`);
+            // Format: "Name (Relation, Age yrs, Gender)"
+            if(name) {
+                familyData.push(`${name} (${relation}, ${age} yrs, ${gender})`);
+            }
         });
         document.getElementById('finalFamilyData').value = familyData.join(" | ");
 
+        // Send Data
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
         .then(response => {
             document.getElementById('status').innerHTML = "✅ Details Submitted! God Bless.";
+            
+            // Reset Form
             form.reset();
             document.getElementById('family-container').innerHTML = ""; 
             document.getElementById('map').classList.remove('map-visible');
             document.getElementById('locationAttempted').value = "false";
+            
+            // Reset Loc Button
             locBtn.innerHTML = "📍 Click to Share Location"; 
             locBtn.classList.remove('loc-failed', 'loc-error');
             locBtn.style.backgroundColor = ""; 
+            
             btn.disabled = false;
             btn.innerHTML = "Submit Information";
         })
